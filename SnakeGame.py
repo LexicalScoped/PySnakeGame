@@ -24,6 +24,8 @@ Snake = {
     "Y": Config["ScreenY"] / 2,
     "Direction": "none",
     "Color": Colors["Red"],
+    "Length": 0,
+    "Tail": [],
 }
 
 Food = {
@@ -39,6 +41,8 @@ def RandomizeFoodlocation():
 def DrawGame(screen):
     screen.fill(Config["background"])
     pygame.draw.rect(screen, Snake["Color"], [ Snake["X"], Snake["Y"], Config["BlockSize"], Config["BlockSize"]])
+    for tail in Snake["Tail"]:
+        pygame.draw.rect(screen, Snake["Color"], [ tail[0], tail[1], Config["BlockSize"], Config["BlockSize"]])
     pygame.draw.rect(screen, Food["Color"], [ Food["X"], Food["Y"], Config["BlockSize"], Config["BlockSize"]])
     pygame.display.update()
 
@@ -55,13 +59,17 @@ def main():
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    Snake["Direction"] = "left"
+                    if Snake["Direction"] != "right":
+                        Snake["Direction"] = "left"
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    Snake["Direction"] = "right"
+                    if Snake["Direction"] != "left":
+                        Snake["Direction"] = "right"
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    Snake["Direction"] = "up"
+                    if Snake["Direction"] != "down":
+                        Snake["Direction"] = "up"
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    Snake["Direction"] = "down"    
+                    if Snake["Direction"] != "up":
+                        Snake["Direction"] = "down"   
 
         if Snake["Direction"] == "left":
             Snake["X"] -= Config["BlockSize"]
@@ -75,15 +83,24 @@ def main():
         DrawGame(screen)
 
         if Snake["X"] < 0 or Snake["X"] >= Config["ScreenX"] or Snake["Y"] < 0 or Snake["Y"] >= Config["ScreenY"]:
+            print("you hit a wall")
+            break
+
+        if [Snake["X"], Snake["Y"]] in Snake["Tail"]:
+            print("you hit your own tail")
             break
 
         if Snake["X"] == Food["X"] and Snake["Y"] == Food["Y"]:
-            print("You eat a Delicious Apple")
+            Snake["Length"] += 1
+            Snake["Tail"].append([Food["X"], Food["Y"]])
             RandomizeFoodlocation()
+
+        Snake["Tail"].append([Snake["X"], Snake["Y"]])
+        if len(Snake["Tail"]) > Snake["Length"]:
+            del Snake["Tail"][0]
 
         clock.tick(Config["Speed"])
 
-    print("you hit a wall")
 
 if __name__ == "__main__":
     main()
