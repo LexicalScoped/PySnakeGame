@@ -5,9 +5,10 @@ import random
 pygame.init()
 
 Colors = {
-    "MintyGreen": (40, 210, 180),
-    "Red": (255, 0, 0),
-    "LightBlue": (0, 128, 255),
+    "MintyGreen": (40, 210, 180 ),
+    "Red": (255, 0, 0 ),
+    "LightBlue": (0, 128, 255 ),
+    "Black": ( 0, 0, 0 ),
 }
 
 Config = {
@@ -17,6 +18,7 @@ Config = {
     "background": Colors["MintyGreen"],
     "BlockSize": 10,
     "Speed": 15,
+    "Menu": [ "Press N for [N]ew Game", "Press Q for [Q]uit" ],
 }
 
 Snake = {
@@ -27,6 +29,13 @@ Snake = {
     "Length": 0,
     "Tail": [],
 }
+
+def ResetSnake():
+    Snake["X"] = Config["ScreenX"] / 2
+    Snake["Y"] = Config["ScreenY"] / 2
+    Snake["Direction"] = "none"
+    Snake["Length"] = 0
+    Snake["Tail"] = []
 
 Food = {
     "X": 0,
@@ -51,55 +60,78 @@ def main():
     clock = pygame.time.Clock()
     pygame.display.set_caption(Config["ScreenTitle"])
     pygame.display.update()
-    RandomizeFoodlocation()
+    menufont = pygame.font.SysFont("microsoftsansserif", 25)
+    bGame = False
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    if Snake["Direction"] != "right":
-                        Snake["Direction"] = "left"
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    if Snake["Direction"] != "left":
-                        Snake["Direction"] = "right"
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    if Snake["Direction"] != "down":
-                        Snake["Direction"] = "up"
-                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    if Snake["Direction"] != "up":
-                        Snake["Direction"] = "down"   
-
-        if Snake["Direction"] == "left":
-            Snake["X"] -= Config["BlockSize"]
-        if Snake["Direction"] == "right":
-            Snake["X"] += Config["BlockSize"]
-        if Snake["Direction"] == "up":
-            Snake["Y"] -= Config["BlockSize"]
-        if Snake["Direction"] == "down":
-            Snake["Y"] += Config["BlockSize"]
+                if event.key == pygame.K_q:
+                    sys.exit()
+                if event.key == pygame.K_n:
+                    bGame = True
+                    ResetSnake()
+                    RandomizeFoodlocation()
                     
-        DrawGame(screen)
 
-        if Snake["X"] < 0 or Snake["X"] >= Config["ScreenX"] or Snake["Y"] < 0 or Snake["Y"] >= Config["ScreenY"]:
-            print("you hit a wall")
-            break
+        screen.fill(Colors["Black"])
+        ypos = 30
+        for line in Config["Menu"]:
+            msg = menufont.render(line, True, Colors["LightBlue"])
+            screen.blit(msg, [30, ypos])
+            ypos += ypos
+        pygame.display.update()
 
-        if [Snake["X"], Snake["Y"]] in Snake["Tail"]:
-            print("you hit your own tail")
-            break
 
-        if Snake["X"] == Food["X"] and Snake["Y"] == Food["Y"]:
-            Snake["Length"] += 1
-            Snake["Tail"].append([Food["X"], Food["Y"]])
-            RandomizeFoodlocation()
+        while bGame:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                        if Snake["Direction"] != "right":
+                            Snake["Direction"] = "left"
+                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        if Snake["Direction"] != "left":
+                            Snake["Direction"] = "right"
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        if Snake["Direction"] != "down":
+                            Snake["Direction"] = "up"
+                    if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                        if Snake["Direction"] != "up":
+                            Snake["Direction"] = "down"   
 
-        Snake["Tail"].append([Snake["X"], Snake["Y"]])
-        if len(Snake["Tail"]) > Snake["Length"]:
-            del Snake["Tail"][0]
+            if Snake["Direction"] == "left":
+                Snake["X"] -= Config["BlockSize"]
+            if Snake["Direction"] == "right":
+                Snake["X"] += Config["BlockSize"]
+            if Snake["Direction"] == "up":
+                Snake["Y"] -= Config["BlockSize"]
+            if Snake["Direction"] == "down":
+                Snake["Y"] += Config["BlockSize"]
+                        
+            DrawGame(screen)
 
-        clock.tick(Config["Speed"])
+            if Snake["X"] < 0 or Snake["X"] >= Config["ScreenX"] or Snake["Y"] < 0 or Snake["Y"] >= Config["ScreenY"]:
+                print("you hit a wall")
+                bGame = False
+
+            if [Snake["X"], Snake["Y"]] in Snake["Tail"]:
+                print("you hit your own tail")
+                bGame = False
+
+            if Snake["X"] == Food["X"] and Snake["Y"] == Food["Y"]:
+                Snake["Length"] += 1
+                Snake["Tail"].append([Food["X"], Food["Y"]])
+                RandomizeFoodlocation()
+
+            Snake["Tail"].append([Snake["X"], Snake["Y"]])
+            if len(Snake["Tail"]) > Snake["Length"]:
+                del Snake["Tail"][0]
+
+            clock.tick(Config["Speed"])
 
 
 if __name__ == "__main__":
