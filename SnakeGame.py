@@ -5,21 +5,52 @@ import random
 pygame.init()
 
 Colors = {
-    "MintyGreen": (40, 210, 180 ),
-    "Red": (255, 0, 0 ),
-    "LightBlue": (0, 128, 255 ),
+    "MintyGreen": ( 40, 210, 180 ),
+    "Red": ( 255, 0, 0 ),
+    "LightBlue": ( 0, 128, 255 ),
     "Black": ( 0, 0, 0 ),
 }
 
 Config = {
     "ScreenX": 800,
     "ScreenY": 600,
-    "ScreenTitle": "Lexical's Snake Game",
     "background": Colors["MintyGreen"],
     "BlockSize": 10,
     "Speed": 15,
-    "Menu": [ "Press N for [N]ew Game", "Press Q for [Q]uit" ],
 }
+
+class Window():
+    def __init__(self):
+        self.X = Config["ScreenX"]
+        self.Y = Config["ScreenY"]
+        self.Title = "Lexical's Snake Game"
+        self.Screen = pygame.display.set_mode([self.X, self.Y])
+        pygame.display.set_caption(self.Title)
+        self.Background = Colors["Black"]
+        self.FontColor = Colors["LightBlue"]
+        self.Menu = [ "Press N for [N]ew Game", "Press Q for [Q]uit" ]
+        self.MenuFont = pygame.font.SysFont("microsoftsansserif", 25)
+        self.MenuLoop = True
+        self.Update()
+        
+    def Update(self):
+        pygame.display.update()
+
+    def ChangeBackground(self, color):
+        self.Background = color
+
+    def MainMenu(self):
+        self.ChangeBackground(Colors["Black"])
+        self.Screen.fill(self.Background)
+        ypos = 30
+        for line in self.Menu:
+            msg = self.MenuFont.render(line, True, self.FontColor)
+            self.Screen.blit(msg, [30, ypos])
+            ypos += ypos
+        self.Update()
+    
+    def Quit(self):
+        sys.exit()
 
 Snake = {
     "X": Config["ScreenX"] / 2,
@@ -56,39 +87,28 @@ def DrawGame(screen):
     pygame.display.update()
 
 def main():
-    screen = pygame.display.set_mode([Config["ScreenX"], Config["ScreenY"]])
+    display = Window()
     clock = pygame.time.Clock()
-    pygame.display.set_caption(Config["ScreenTitle"])
-    pygame.display.update()
-    menufont = pygame.font.SysFont("microsoftsansserif", 25)
     bGame = False
 
-    while True:
+    while display.MenuLoop:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                sys.exit()
+                display.Quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    sys.exit()
+                    display.Quit()
                 if event.key == pygame.K_n:
                     bGame = True
                     ResetSnake()
                     RandomizeFoodlocation()
                     
-
-        screen.fill(Colors["Black"])
-        ypos = 30
-        for line in Config["Menu"]:
-            msg = menufont.render(line, True, Colors["LightBlue"])
-            screen.blit(msg, [30, ypos])
-            ypos += ypos
-        pygame.display.update()
-
+        display.MainMenu()
 
         while bGame:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    sys.exit()
+                    display.Quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         if Snake["Direction"] != "right":
@@ -112,7 +132,7 @@ def main():
             if Snake["Direction"] == "down":
                 Snake["Y"] += Config["BlockSize"]
                         
-            DrawGame(screen)
+            DrawGame(display.Screen)
 
             if Snake["X"] < 0 or Snake["X"] >= Config["ScreenX"] or Snake["Y"] < 0 or Snake["Y"] >= Config["ScreenY"]:
                 print("you hit a wall")
@@ -124,7 +144,6 @@ def main():
 
             if Snake["X"] == Food["X"] and Snake["Y"] == Food["Y"]:
                 Snake["Length"] += 1
-                Snake["Tail"].append([Food["X"], Food["Y"]])
                 RandomizeFoodlocation()
 
             Snake["Tail"].append([Snake["X"], Snake["Y"]])
