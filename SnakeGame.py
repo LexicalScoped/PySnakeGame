@@ -90,9 +90,6 @@ class Food():
         self.Y = round(random.randrange(0,display.Y - display.BlockSize), -1)
         self.Color = Colors["LightBlue"]
 
-
-
-
 def main():
     display = Window()
     clock = pygame.time.Clock()
