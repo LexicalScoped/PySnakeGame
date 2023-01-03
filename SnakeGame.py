@@ -32,6 +32,8 @@ class Window():
         self.MenuFont = pygame.font.SysFont("microsoftsansserif", 25)
         self.MenuLoop = True
         self.GameState = False
+        self.GameOver = False
+        self.Pause = False
         self.BlockSize = 10
         self.RefreshRate = 15
         self.Update()
@@ -60,6 +62,17 @@ class Window():
         for tail in snake.Tail:
             pygame.draw.rect(self.Screen, snake.Color, [ tail[0], tail[1], self.BlockSize, self.BlockSize])
         pygame.draw.rect(self.Screen, food.Color, [ food.X, food.Y, self.BlockSize, self.BlockSize])
+        Overlay = pygame.Surface((self.X, self.Y))
+        Overlay.set_alpha(128)
+        Overlay.fill(Colors["Black"])
+        if self.Pause:
+            self.Screen.blit(Overlay, [0, 0])
+            msg = self.MenuFont.render("Game Paused - Press P to contiue", True, self.FontColor)
+            self.Screen.blit(msg, [100, 100])   
+        if self.GameOver:
+            self.Screen.blit(Overlay, [0, 0])
+            msg = self.MenuFont.render("Game Over - Press ESC to return to Menu", True, self.FontColor)
+            self.Screen.blit(msg, [100, 100])   
         pygame.display.update()
     
     def Quit(self):
@@ -99,7 +112,7 @@ def main():
             if event.type == pygame.QUIT:
                 display.Quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
+                if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                     display.Quit()
                 if event.key == pygame.K_n:
                     display.GameState = True
@@ -113,6 +126,12 @@ def main():
                 if event.type == pygame.QUIT:
                     display.Quit()
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        display.GameState = False
+                        display.GameOver = False
+                        display.Pause = False
+                    if event.key == pygame.K_p:
+                        display.Pause = True
                     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         if snake.Direction != DIRECTIONS.RIGHT:
                             snake.Direction = DIRECTIONS.LEFT
@@ -130,13 +149,23 @@ def main():
                         
             display.DrawGame(snake, food)
 
-            if snake.X < 0 or snake.X >= display.X or snake.Y < 0 or snake.Y >= display.Y:
-                print("you hit a wall")
-                display.GameState = False
+            while display.Pause:
+                display.DrawGame(snake, food)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        display.Quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            display.GameState = False
+                            display.GameOver = False
+                            display.Pause = False
+                        if event.key == pygame.K_p:
+                            display.Pause = False
+                clock.tick(display.RefreshRate)
 
-            if [snake.X, snake.Y] in snake.Tail:
-                print("you hit your own tail")
+            if snake.X < 0 or snake.X >= display.X or snake.Y < 0 or snake.Y >= display.Y or [snake.X, snake.Y] in snake.Tail:
                 display.GameState = False
+                display.GameOver = True
 
             if snake.X == food.X and snake.Y == food.Y:
                 snake.Length += 1
@@ -148,8 +177,21 @@ def main():
                 del snake.Tail[0]
 
             if not display.GameState:
-                del food
-                del snake
+                if not display.GameOver:
+                    del food
+                    del snake
+                else:
+                    while display.GameOver:
+                        display.DrawGame(snake, food)
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                display.Quit()
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_ESCAPE:
+                                    display.GameState = False
+                                    display.GameOver = False
+                                    display.Pause = False
+                        clock.tick(display.RefreshRate)
 
             clock.tick(display.RefreshRate)
 
